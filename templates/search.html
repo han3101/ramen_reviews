@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <!-- <h1 class="title">{% block title %} Reviews {% endblock %}</h1> -->
+    <div class="content">
+        <h1>Ramen Reviews</h1>
+
+        <p>Here are your search results</p>
+        <table>
+            <tr>
+                <th>Country</th>
+                <th>Brand</th>
+                <th>Type</th>
+                <th>Package</th>
+                <th>Rating</th>
+            </tr>
+            {% for review in reviews %}
+                <tr>
+                    <td>{{ review.country }}</td>
+                    <td>{{ review.brand }}</td>
+                    <td>{{ review.ramen_type }}</td>
+                    <td>{{ review.package }}</td>
+                    <td>{{ review.rating }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+        
+
+    </div>
+{% endblock %}
