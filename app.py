@@ -1,4 +1,4 @@
-import os, csv
+import csv, json
 from flask import Flask, render_template, request, url_for, redirect
 from flask_sqlalchemy import SQLAlchemy
 
@@ -16,7 +16,7 @@ class Ramen(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     country = db.Column(db.String(50), nullable=True)
     brand = db.Column(db.String(50), nullable=True)
-    ramen_type = db.Column(db.String(100))
+    ramen_type = db.Column(db.String(100), nullable=True)
     package = db.Column(db.String(50), nullable=True)
     rating = db.Column(db.Float, nullable=True)
 
@@ -56,24 +56,41 @@ def router():
     method = request.method
     if method == "POST":
         add()
+        # return val
     elif method == "PUT":
         modify()
+        # return "put"
     elif method == "DELETE":
         delete()
-    else:
-        return url_for('index')
+        # return "delete"
+    
+    return redirect(url_for('index'))
+    # return "neither \n"
 
 def add():
     # Get the form data and create a new record in the database
-    country = request.form['country']
-    brand = request.form['brand']
-    type = request.form['type']
-    package = request.form['package']
-    rating = request.form['rating']
-    new_review = Ramen(country=country, brand=brand, type=type, package=package, rating=rating)
-    db.session.add(new_review)
-    db.session.commit()
-    return redirect(url_for('index'))
+    try:
+        if request.headers['Content-Type'] == 'application/json':
+            review_dict = request.get_json()
+            country = review_dict.setdefault('country')
+            brand = review_dict.setdefault('brand')
+            type = review_dict.setdefault('type')
+            package = review_dict.setdefault('package')
+            rating = review_dict.setdefault('rating')
+
+        else: 
+            country = request.form.get('country')
+            brand = request.form.get('brand')
+            type = request.form.get('type')
+            package = request.form.get('package')
+            rating = request.form.get('rating')
+
+        new_review = Ramen(country=country, brand=brand, ramen_type=type, package=package, rating=rating)
+        db.session.add(new_review)
+        db.session.commit()
+    except:
+        return "There was an issue creating the review"
+    
 
 # def modify():
 #     review_id = request.args.get('id')
@@ -82,39 +99,80 @@ def add():
 
 def modify():
     # Get the form data and update the corresponding record in the database
-    review_id = request.form['id']
-    review = Ramen.query.get(review_id)
-    review.country = request.form['country']
-    review.brand = request.form['brand']
-    review.type = request.form['type']
-    review.package = request.form['package']
-    review.rating = request.form['rating']
-    db.session.commit()
+    if request.headers['Content-Type'] == 'application/json':
+        review_dict = request.get_json()
+        review_id = review_dict.setdefault('id')
+        country = review_dict.setdefault('country')
+        brand = review_dict.setdefault('brand')
+        type = review_dict.setdefault('type')
+        package = review_dict.setdefault('package')
+        rating = review_dict.setdefault('rating')
+
+        if review_id:
+            review = Ramen.query.get(review_id)
+            try:
+                review.country = country
+                review.brand = brand
+                review.ramen_type = type
+                review.package = package
+                review.rating = rating
+
+                db.session.commit()
+                return redirect(url_for('index'))
+            except:
+                return "There was an error modifying the review"
+    else:
+        return "Invalid format please enter \{ 'id'\: <number> \}"
+
+    # review_id = request.form['id']
+    
+    # review.country = request.form['country']
+    # review.brand = request.form['brand']
+    # review.type = request.form['type']
+    # review.package = request.form['package']
+    # review.rating = request.form['rating']
+    
     return redirect(url_for('index'))
 
 def delete():
-    review_id = request.args.get('id')
-    review = Ramen.query.get(review_id)
-    try:
-        db.session.delete(review)
-        db.session.commit()
-        return redirect(url_for('index'))
-    except:
-        return "There was an issue deleting the review"
+    # review_id = request.args.get('id')
+    if request.headers['Content-Type'] == 'application/json':
+        to_delete = request.get_json()
+        review_id = to_delete.setdefault('id')
 
-@app.route('/country', methods=["POST"])
+    if review_id:
+        review = Ramen.query.get(review_id)
+        try:
+            db.session.delete(review)
+            db.session.commit()
+            return redirect(url_for('index'))
+        except:
+            return "There was an issue deleting the review"
+    else:
+        return "Invalid format please enter \{ 'id'\: <number> \}"
+
+@app.route('/country', methods=["GET", "POST"])
 def by_country():
     # Get the query parameter and filter the database by country
-    country = request.form.get('country')
-    country = country.strip("', /,, (, )")
-    print(country)
+    if request.method == "POST":
+        country = request.form.get('country')
+        country = country.strip("', /,, (, )")
+        # print(country)
+    elif request.method == "GET" and request.headers['Content-Type'] == 'application/json':
+        country = request.get_json()['country']
+
     reviews = Ramen.query.filter_by(country=country).all()
     return render_template('search.html', reviews=reviews)
 
-@app.route('/search', methods=["POST"])
+@app.route('/search', methods=["GET", "POST"])
 def by_ptext():
     # Get the query parameter and filter the database by partial text match
-    ptext = request.form.get('search')
+    if request.method == "POST":
+        ptext = request.form.get('search')
+
+    elif request.method == "GET" and request.headers['Content-Type'] == 'application/json':
+        ptext = request.get_json()['type']
+
     reviews = Ramen.query.filter(Ramen.ramen_type.contains(ptext)).all()
     return render_template('search.html', reviews=reviews)
 

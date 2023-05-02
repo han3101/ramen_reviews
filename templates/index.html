@@ -26,13 +26,13 @@
         </table>
 
 
-        <form action="{{ url_for('by_ptext')}}" method="post">
+        <form action="{{ url_for('by_ptext') }}" method="post">
             <input name="search" type="text" value="" placeholder="Enter Ramen Type" required>
            
             <button>search</button>
         </form>
 
-        <form action="{{ url_for('by_country')}}" method="post">
+        <form action="{{ url_for('by_country') }}" method="post">
             <label>Select Country</label>
             <select id="country" name="country">
                 {% for country in countries %}
@@ -40,6 +40,16 @@
                 {% endfor %}
             </select>
             <input type="submit" value="Submit">
+        </form>
+
+        <form action="{{ url_for('router') }}" method="post">
+            <label>Create a new ramen review!</label>
+            <input name="country" type="text" value="" placeholder="Enter Country">
+            <input name="brand" type="text" placeholder="Enter Brand">
+            <input name="type" type="text" placeholder="Enter Ramen Type">
+            <input name="package" type="text" placeholder="Enter Package Type">
+            <input name="rating" type="text" placeholder="Leave a rating!">
+            <button>Create</button>
         </form>
         
 

@@ -8,6 +8,7 @@
         <p>Here are your search results</p>
         <table>
             <tr>
+                <th>ID</th>
                 <th>Country</th>
                 <th>Brand</th>
                 <th>Type</th>
@@ -16,6 +17,7 @@
             </tr>
             {% for review in reviews %}
                 <tr>
+                    <td> {{ review.id }} </td>
                     <td>{{ review.country }}</td>
                     <td>{{ review.brand }}</td>
                     <td>{{ review.ramen_type }}</td>
