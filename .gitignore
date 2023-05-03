@@ -1,0 +1,4 @@
+venv/
+ramen.db
+instance/
+__pycache__/
